@@ -1,6 +1,7 @@
 #include <GL/glut.h>
 #include <math.h>
 #include<iostream>
+#include<time.h>
 
 using namespace std;
 
@@ -27,11 +28,14 @@ int mapi,mapj,flag=0;
 float gx=7.5;
 float gz=-0.5;
 float angle=0;
+int treasurex=0;
+int treasurez=0;
+time_t start;
 
 const GLfloat light_ambient[]={0.0f,0.0f,0.0f,1.0f};
 const GLfloat light_diffuse[]={1.0f,1.0f,1.0f,1.0f};
 const GLfloat light_specular[]={1.0f,1.0f,1.0f,1.0f};
-const GLfloat light_position[]={8.0f,6.0f,-8.0f,1.0f};
+const GLfloat light_position[]={8.0f,8.0f,-8.0f,1.0f};
 
 const GLfloat mat_ambient[]={1.0f,1.0f,1.0f,1.0f};
 const GLfloat mat_diffuse[]={0.5f,0.5f,0.5f,1.0f};
@@ -62,7 +66,7 @@ void generatemap()
             }
             if(map[mapi][mapj]==2)
             {
-                glColor3ub(255,170,0);
+                glColor3ub(255,255,0);
                 glPushMatrix();
                     glTranslatef((mapj+0.5),-0.35,-1*(mapi+0.5));
                     glutSolidCube(0.3);
@@ -70,7 +74,7 @@ void generatemap()
             }
         }
     }
-    glColor3ub(88,18,18);
+    glColor3ub(255,180,0);
     glPushMatrix();
         glTranslatef(8.5,-9,-8.5);
         glutSolidCube(17);
@@ -108,48 +112,58 @@ void init()
 
 void display()
 {
-    int i;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     double aspect = (double)viewport[2] / (double)viewport[3];
-    gluPerspective(60, aspect, 0.1, 100);
+    gluPerspective(90, aspect, 0.1, 100);
 
-    gluLookAt( gx,0.3,gz, gx + sin(angle),0.1,gz-cos(angle),0,1,0 );
+    gluLookAt( gx,5,gz, gx + sin(angle),2,gz-cos(angle),0,1,0 );
 
 
     glMatrixMode(GL_MODELVIEW);
     generatemap();
-    if(floor(gx)==8&&floor(gz)==8)
-        exit(0);
+    if(gx>0.0 && gz<0.0)
+    {
+        treasurex=floor(gx);
+        treasurez=floor(-1*gz);
+        if(map[treasurex][treasurez]==2)
+        {
+            cout<<endl<<"Time Taken - "<<difftime(time(0),start)<<" seconds";
+
+            char ch;
+            cout<<endl<<"Press Y to exit... ";
+            glutHideWindow();
+            cin>>ch;
+            if(ch=='Y'||ch=='y')
+                exit(0);
+        }
+    }
+
     glutSwapBuffers();
 }
 
 void specialkeys(int key, int x, int y)
 {
-    //method to stop user from touching the wall goes here
-
-    //action to take when key pressed
     float fraction = 0.05;
     switch(key)
     {
         case GLUT_KEY_UP:   gx= gx + fraction*sin(angle);
                             gz= gz - fraction*cos(angle);
-                            cout<<gx<<" "<<gz<<endl;
+                            //cout<<gx<<" "<<gz<<endl;
 
                             break;
         case GLUT_KEY_DOWN: gx= gx - fraction*sin(angle);
                             gz= gz + fraction*cos(angle);
-                            cout<<gx<<" "<<gz<<endl;
+                            //cout<<gx<<" "<<gz<<endl;
                             break;
         case GLUT_KEY_LEFT: angle -= M_PI/180;
-                            cout<<gx<<" "<<gz<<" angle"<<angle<<endl;
+                            //cout<<gx<<" "<<gz<<" angle"<<angle<<endl;
                             break;
         case GLUT_KEY_RIGHT:angle += M_PI/180;
-                            cout<<gx<<" "<<gz<<" angle"<<angle<<endl;
+                            //cout<<gx<<" "<<gz<<" angle"<<angle<<endl;
                             break;
         glutPostRedisplay();
     }
@@ -165,15 +179,14 @@ int main(int argc, char **argv)
     glutInit(&argc, argv);
     glutInitWindowSize(1280,720);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-    glutCreateWindow("CUBES");
-
+    glutCreateWindow("3D MAZE");
     glutDisplayFunc(display);
     glutIdleFunc(display);
     glutReshapeFunc(reshape);
     glutSpecialFunc(specialkeys);
 
     init();
-    glEnable(GL_DEPTH_TEST);
+    start=time(0);
     glutMainLoop();
     return 0;
 }
